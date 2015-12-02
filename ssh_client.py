@@ -1,5 +1,5 @@
 """Friendly Python SSH2 interface."""
- 
+"""credit to: http://snipplr.com/view/48033/ (with some of my own changes)"""
 import os
 import tempfile
 import paramiko
