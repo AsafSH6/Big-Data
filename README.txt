@@ -6,7 +6,7 @@
 6. The command is: "python program_manager.py <HOST> <USERNAME> <PASSWORD>" where you have to pass the paramaters host, username and password.
 7. There are default values: HOST=localhost, USERNAME=cloudera, PASSWORD=cloudera.
 8. You may send only the HOST and the other paramaters will get their default values.
-9. Example: "python program_manager.py 192.168.134.10"- connection to 192.168.134.10 with USERNAME=cloudera PASSWORD=cloudera.
+9. Example: "python program_manager.py 192.168.134.10"- open connection with 192.168.134.10 using USERNAME=cloudera PASSWORD=cloudera.
 7. Example:
 	python program_manager.py com4.cs.colman.ac.il shavitas password
 	~Connected to com4.cs.colman.ac.il with shavitas~
