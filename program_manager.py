@@ -113,13 +113,13 @@ class ProgramManager(object):
         self.put_dir(local_path=java_files_dir, remote_path='{dir_name}'.format(dir_name=dir_name, java_files_dir=java_files_dir))
         # print self.ssh_client.execute('hadoop fs -mkdir {hdfs_path}/{dir_name}'.format(hdfs_path=hdfs_path, dir_name=dir_name))
         # print self.ssh_client.execute('hadoop fs -put {dir_name}/{input_data_dir} {hdfs_path}/{dir_name}'.format(hdfs_path=hdfs_path, input_data_dir=input_data_dir, dir_name=dir_name))
-        print '\n'.join(self.ssh_client.execute('cd task3'))
+        print '\n'.join(self.ssh_client.execute('cd ~/task3'))
         print '\n'.join(self.ssh_client.execute('pwd'))
-        print '\n'.join(self.ssh_client.execute('javac -classpath `hadoop classpath` solution/*.java'))
-        print '\n'.join(self.ssh_client.execute('jar cvf task3.jar solution/*.class'))
+        print '\n'.join(self.ssh_client.execute('cd task3; javac -classpath `hadoop classpath` solution/*.java'))
+        print '\n'.join(self.ssh_client.execute('cd task3; jar cvf task3.jar solution/*.class'))
         print 'running hadoop'
-        print '\n'.join(self.ssh_client.execute('hadoop jar task3.jar solution.WordMatch task3/inputDataTask3 task3/output'))
-        print '\n'.join(self.ssh_client.execute('hadoop fs -get task3/output'))
+        print '\n'.join(self.ssh_client.execute('cd task3; hadoop jar task3.jar solution.WordMatch task3/inputDataTask3 task3/output'))
+        print '\n'.join(self.ssh_client.execute('cd task3; hadoop fs -get task3/output'))
         self.get_file('task3/output')
         print 'done'
 
