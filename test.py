@@ -3,5 +3,7 @@ __author__ = 'Asaf'
 # for item in os.listdir('solution'):
 #     print item
 
-print 'a/b/c'.split('/')[-1]
-print 'ac'.split('/')[-1]
+l = ['a', 'b', 'c']
+
+map(lambda x: x + 'e', l)
+print l

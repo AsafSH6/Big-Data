@@ -14,7 +14,8 @@ PASSWORD = 'training'
 class ProgramManager(object):
     def __init__(self, host=HOST, username=USER, password=PASSWORD):
             self.options = dict(mkdir=self.create_directory, putfile=self.put_file,
-                                getfile=self.get_file, quit=self.close_program, run_log_analysis_job=self.run_log_analysis_job)
+                                getfile=self.get_file, quit=self.close_program, run_log_analysis_job=self.run_log_analysis_job,
+                                test=self.test)
             self.host, self.username, self.password = host, username, password
             self.ssh_client = None
 
@@ -76,6 +77,7 @@ class ProgramManager(object):
             print 'invalid remote path.\n'
 
     def get_file(self, params):
+        print 'getfiles', params
         try:
             if len(params) is 1:
                 self.ssh_client.get(remotepath=params[0])
@@ -88,6 +90,7 @@ class ProgramManager(object):
         except WindowsError as e:
             print 'invalid local path.\n'
         except IOError as e:
+            print e
             print e.args[1]
 
     def put_dir(self, local_path, remote_path):
@@ -96,6 +99,39 @@ class ProgramManager(object):
         for item in os.listdir(local_path):
             self.put_file(params=['{local_path}/{file}'.format(local_path=local_path, file=item),
                                   '{remote_path}/{dir_name}/{file}'.format(remote_path=remote_path, dir_name=dir_name, file=item)])
+
+    def get_dir(self, local_path, remote_path):
+        dir_name = remote_path.split(u'/')[-1]
+        if not dir_name.endswith(u'/'):
+            dir_name += u'/'
+
+        if not local_path.endswith(u'/'):
+            local_path += u'/'
+
+        if not remote_path.endswith(u'/'):
+            remote_path += u'/'
+
+        new_local_dir_path = local_path + dir_name
+        print u'Creating Local Dir: ' + new_local_dir_path
+        os.mkdir(new_local_dir_path)
+
+        print u'Remote Path: ' + remote_path
+        print u'Local Path: ' + new_local_dir_path
+
+        items = self.ssh_client.execute(u'ls ' + remote_path)
+        items = map(lambda x: x.replace(u'\n', u''), items)
+
+        for item in items:
+            item_path = remote_path + item
+            print u'Item Path: ' + item_path
+
+            is_dir = self.ssh_client.execute(u'test -d {item_path}; echo $?'.format(item_path=item_path))[0]
+            if is_dir == u'0\n':
+                print u'Entering Dir: ' + item_path
+                self.get_dir(remote_path=item_path, local_path=new_local_dir_path)
+            else:
+                print u'Downloading File: ' + item_path
+                self.get_file([item_path, new_local_dir_path + item])
 
     def run_log_analysis_job(self, params):
         hdfs_path = '/user/training/'
@@ -120,7 +156,8 @@ class ProgramManager(object):
         print 'running hadoop'
         print '\n'.join(self.ssh_client.execute('cd task3; hadoop jar task3.jar solution.WordMatch task3/inputDataTask3 task3/output'))
         print '\n'.join(self.ssh_client.execute('cd task3; hadoop fs -get task3/output'))
-        self.get_file('task3/output')
+        self.get_dir(local_path='task3', remote_path='task3/output')
+
         print 'done'
 
         # print self.ssh_client.execute('hadoop fs -put {dir_name}/{java_files_dir} {hdfs_path}/{dir_name}'.format(hdfs_path=hdfs_path, java_files_dir=java_files_dir, dir_name=dir_name))
@@ -136,6 +173,11 @@ class ProgramManager(object):
         finally:
             print 'closed.'
             quit()
+
+    def test(self, params):
+        self.get_dir(local_path='task3', remote_path='task3/output')
+
+
 
 
 def main(argv):
