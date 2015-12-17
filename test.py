@@ -1,9 +1,8 @@
 __author__ = 'Asaf'
-# import os
+import os
 # for item in os.listdir('solution'):
 #     print item
 
-l = ['a', 'b', 'c']
+for item in os.listdir('inputDataTask3/'):
+    print item, os.path.isdir('inputDataTask3/' + item)
 
-map(lambda x: x + 'e', l)
-print l
