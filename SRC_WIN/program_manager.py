@@ -236,7 +236,7 @@ class ProgramManager(object):
             quit()
 
     def test(self, params):
-        self.get_dir(local_path='task3', remote_path='test/test/')
+        pass
 
 
 def main(argv):
