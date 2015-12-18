@@ -6,17 +6,16 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.*;
 
-public class WordMatch extends Configured implements Tool {
+public class LogAnalysis extends Configured implements Tool {
 
 	public int run(String[] args) throws Exception {
-		JobConf conf = new JobConf(getConf(), WordMatch.class);
-		conf.setJobName("WordMatcher");
+		JobConf conf = new JobConf(getConf(), LogAnalysis.class);
+		conf.setJobName("LogAnalysis");
 
 		conf.setOutputKeyClass(LogWriteable.class);
 		conf.setOutputValueClass(IntWritable.class);
 
-		conf.setMapperClass(WordMapper.class);
-		//	conf.setCombinerClass(Reduce.class);
+		conf.setMapperClass(Map.class);
 		conf.setReducerClass(Reduce.class);
 
 		conf.setInputFormat(TextInputFormat.class);
@@ -30,7 +29,7 @@ public class WordMatch extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Configuration(), new WordMatch(), args);
+		int res = ToolRunner.run(new Configuration(), new LogAnalysis(), args);
 		System.exit(res);
 	}
 }

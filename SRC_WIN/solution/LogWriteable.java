@@ -48,13 +48,11 @@ public class LogWriteable implements WritableComparable<LogWriteable> {
 	@Override
 	public int compareTo(LogWriteable o) {
 		return this.toString().compareTo(o.toString());
-
 	}
 	
 	@Override
 	public String toString() {
 	    return this.username.toString()+ " " + this.hostname.toString() + " " + this.date.toString();
-
 	}
 	
 	@Override

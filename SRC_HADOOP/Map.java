@@ -5,7 +5,7 @@ import java.io.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 
-public class WordMapper extends MapReduceBase implements Mapper<LongWritable, Text, LogWriteable, IntWritable> {
+public class Map extends MapReduceBase implements Mapper<LongWritable, Text, LogWriteable, IntWritable> {
 
 	public void map(LongWritable key, Text value,OutputCollector<LogWriteable, IntWritable> output, Reporter reporter) throws IOException {
 
@@ -17,7 +17,7 @@ public class WordMapper extends MapReduceBase implements Mapper<LongWritable, Te
 				++j;
 			}
 		}
-		output.collect(new LogWriteable(relevantLines[0], relevantLines[1], relevantLines[2], relevantLines[3]), new IntWritable(1));
+		output.collect(new LogWriteable(relevantLines[0].split("/")[2], relevantLines[1], relevantLines[2], relevantLines[3]), new IntWritable(1));
 
 	}
 }

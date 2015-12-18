@@ -10,16 +10,12 @@ HOST = 'localhost'
 USER = 'training'
 PASSWORD = 'training'
 
-# HOST = 'com4.cs.colman.ac.il'
-# USER = 'shavitas'
-# PASSWORD = '1504@cs'
-
 
 class ProgramManager(object):
     def __init__(self, host=HOST, username=USER, password=PASSWORD):
         self.options = dict(mkdir=self.create_directory, putfile=self.put_file,
                             getfile=self.get_file, quit=self.close_program,
-                            run_log_analysis_job=self.run_log_analysis_job,
+                            task3=self.run_log_analysis_job,
                             test=self.test)
         self.host, self.username, self.password = host, username, password
         self.ssh_client = None
@@ -40,7 +36,7 @@ class ProgramManager(object):
               '  mkdir <name> \n' \
               '  putfile <local path> [<remote path>]\n' \
               '  getfile <remote path> [<local path>]\n' \
-              '  run_log_analysis_job\n' \
+              '  task3\n' \
               '  quit\n'
 
     def handle_command(self):
@@ -54,6 +50,7 @@ class ProgramManager(object):
             self.print_instructions()
 
     def create_directory(self, params):
+        print params
         if len(params) is not 1:
             print 'invalid arguments'
             self.print_instructions()
@@ -82,7 +79,6 @@ class ProgramManager(object):
             print 'invalid remote path.\n'
 
     def get_file(self, params):
-        print 'getfiles', params
         try:
             if len(params) is 1:
                 self.ssh_client.get(remotepath=params[0])
@@ -91,7 +87,7 @@ class ProgramManager(object):
             else:
                 print 'invalid arguments\n'
                 return
-            print 'downloaded file.\n'
+            print 'downloaded file: {file}.\n'.format(file=params[0])
         except WindowsError as e:
             print 'invalid local path.\n'
         except IOError as e:
@@ -99,7 +95,11 @@ class ProgramManager(object):
             print e.args[1]
 
     def put_dir(self, local_path, remote_path):
-        dir_name = local_path.split(u'/')[-1]
+        if local_path.endswith(u'/'):
+            dir_name = local_path.split(u'/')[-2]
+        else:
+            dir_name = local_path.split(u'/')[-1]
+
         if not dir_name.endswith(u'/'):
             dir_name += u'/'
 
@@ -119,10 +119,10 @@ class ProgramManager(object):
                 self.put_dir(local_path=local_path + item, remote_path=new_remote_path)
             else:
                 self.put_file(params=[item_path, new_remote_path + item])
-                print u'Uploaded File: ' + item
 
     def get_dir(self, local_path, remote_path):
         dir_name = remote_path.split(u'/')[-1]
+
         if not dir_name.endswith(u'/'):
             dir_name += u'/'
 
@@ -133,36 +133,29 @@ class ProgramManager(object):
             remote_path += u'/'
 
         new_local_dir_path = local_path + dir_name
-        # print u'Creating Local Dir: ' + new_local_dir_path
         os.mkdir(new_local_dir_path)
-
-        # print u'Remote Path: ' + remote_path
-        # print u'Local Path: ' + new_local_dir_path
 
         items = self.ssh_client.execute(u'ls ' + remote_path)
         items = map(lambda x: x.replace(u'\n', u''), items)
 
         for item in items:
             item_path = remote_path + item
-            # print u'Item Path: ' + item_path
 
             is_dir = self.ssh_client.execute(u'test -d {item_path}; echo $?'.format(item_path=item_path))[0]
             if is_dir == u'0\n':
-                # print u'Entering Dir: ' + item_path
                 self.get_dir(remote_path=item_path, local_path=new_local_dir_path)
             else:
                 self.get_file([item_path, new_local_dir_path + item])
-                print u'Downloading File: ' + item_path
 
     def run_log_analysis_job(self, params):
         dir_name = 'task3/'
         hdfs_path = '/user/training/'
         input_data_dir = 'inputDataTask3/'
-        output_dir = hdfs_path + 'output'
+        output_dir = 'output'
         java_files_dir = 'solution/'
         jar_name = 'task3.jar'
         package_name = 'solution'
-        main_class = 'WordMatch'
+        main_class = 'LogAnalysis'
 
         print '**Running job**\n' \
               'dir name={dir_name}.\n' \
@@ -176,51 +169,60 @@ class ProgramManager(object):
             dir_name=dir_name, input_data_dir=input_data_dir, java_files_dir=java_files_dir,
             jar_name=jar_name, package_name=package_name, main_class=main_class,
             hdfs_path=hdfs_path, output_dir=output_dir
-        )
+            )
 
         # creating directory of the current job with the input data and uploading to it to hdfs
         self.create_directory([dir_name])
         self.put_dir(local_path=input_data_dir, remote_path=dir_name)
-        command = 'hadoop fs -put {dir_name} {hdfs_path}{dir_name}'
-        response = self.ssh_client.execute(command.format(hdfs_path=hdfs_path,
-                                                          dir_name=dir_name
-                                                          ))
+
+        command = 'hadoop fs -put {dir_name} {hdfs_path}'.format(hdfs_path=hdfs_path,
+                                                                 dir_name=dir_name)
+        print command
+        response = self.ssh_client.execute(command)
         print response
 
         # uploading the java job files, compiling it and creating the jar
         self.put_dir(local_path=java_files_dir, remote_path=dir_name)
 
-        command = 'cd {dir_name}; javac -classpath `hadoop classpath` {java_files_dir}/*.java'
-        response = self.ssh_client.execute(command.format(
+        command = 'cd {dir_name}; javac -classpath `hadoop classpath` {java_files_dir}/*.java'.format(
             dir_name=dir_name,
-            java_files_dir=java_files_dir))
+            java_files_dir=java_files_dir)
+        print command
+        response = self.ssh_client.execute(command)
         print '\n'.join(response)
 
-        command = 'cd {dir_name}; jar cvf {jar_name} {java_files_dir}*.class'
-        response = self.ssh_client.execute(command.format(
+        command = 'cd {dir_name}; jar cvf {jar_name} {java_files_dir}*.class'.format(
             dir_name=dir_name,
             jar_name=jar_name,
             java_files_dir=java_files_dir
-        ))
+        )
+        print command
+        response = self.ssh_client.execute(command)
         print '\n'.join(response)
 
         print 'running hadoop'
-        command = 'cd {dir_name}; hadoop jar {jar_name} {package_name}.{main_class} {dir_name}{input_data_dir} {dir_name}{output_dir}'
-        self.ssh_client.execute(command.format(
+        command = 'cd {dir_name}; hadoop jar {jar_name} {package_name}.{main_class} {dir_name}{input_data_dir} {dir_name}{output_dir}'.format(
             dir_name=dir_name,
             jar_name=jar_name,
             package_name=package_name,
             main_class=main_class,
             input_data_dir=input_data_dir,
             output_dir=output_dir
-        ))
-        command = 'cd {dir_name}; hadoop fs -get {dir_name}{output_dir}'
-        response = self.ssh_client.execute(command.format(
+        )
+        print command
+        response = self.ssh_client.execute(command)
+        print '\n'.join(response)
+
+        command = 'cd {dir_name}; hadoop fs -get {dir_name}{output_dir}'.format(
             dir_name=dir_name,
             output_dir=output_dir
-        ))
+        )
+        print command
+        response = self.ssh_client.execute(command)
         print '\n'.join(response)
-        self.get_dir(local_path=dir_name, remote_path='{dir_name}{output_dir}'.format(dir_name=dir_name, output_dir=output_dir))
+
+        self.get_dir(local_path=dir_name,
+                     remote_path='{dir_name}{output_dir}'.format(dir_name=dir_name, output_dir=output_dir))
 
         print 'done'
 
@@ -234,7 +236,7 @@ class ProgramManager(object):
             quit()
 
     def test(self, params):
-        self.put_dir(local_path='inputDataTask3', remote_path='testbd')
+        self.get_dir(local_path='task3', remote_path='test/test/')
 
 
 def main(argv):
