@@ -13,7 +13,6 @@ public class Reduce extends MapReduceBase implements Reducer<LogWriteable, IntWr
 		reporter.incrCounter(Counters.OUTPUT_KEYS, 1);
 		while (values.hasNext()) {
 			sum += values.next().get();
-			
 		}
 		output.collect(key, new IntWritable(sum));
 	}

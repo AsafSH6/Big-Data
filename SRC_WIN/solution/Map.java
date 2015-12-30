@@ -13,6 +13,6 @@ public class Map extends MapReduceBase implements Mapper<LongWritable, Text, Log
 		String[] relevantLines = new String[2];
 		relevantLines[0] = lines[4];
 		relevantLines[1] = lines[31];
-				output.collect(new LogWriteable(relevantLines[0].split("/")[2], relevantLines[1], new IntWritable(1));
+				output.collect(new LogWriteable(relevantLines[0].split("/")[2], relevantLines[1]), new IntWritable(1));
 	}
 }
