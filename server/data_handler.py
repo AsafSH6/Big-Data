@@ -1,6 +1,8 @@
 # utf-8
 import datetime as dt
 import requests as req
+import pandas as pd
+import io
 from tomorrow import threads
 
 YAHOO_FINANCE_API_URL_FORMAT = \
@@ -22,6 +24,7 @@ class DataHandler(object):
         self.maximum_lines = maximum_lines
         self.stocks_file_path = stocks_file_path
 
+        days_from_today += (days_from_today / 7) * 2  # fridays, saturdays
         end_date = dt.date.today()
         beginning_date = end_date - dt.timedelta(days=days_from_today)
 
@@ -46,27 +49,32 @@ class DataHandler(object):
         return companies
 
     @threads(10)
-    def download_company_stocks_details_between_given_dates(self, company_name):
-        r = req.get(url=self.url.format(company_name=company_name))
-        # print r.status_code
-        self.split_csv_file_by_maximum_lines(company_name, r.content)
+    def download_company_stocks_details_between_given_dates(self, companies):
+        with open('files/{companies}.csv'.format(companies=', '.join(companies)), 'wb') as f:
+            for company_name in companies:
+                r = req.get(url=self.url.format(company_name=company_name))
+                if r.status_code is 200:
+                    self.split_csv_file_by_maximum_lines(f, company_name, r.content)
 
-    def split_csv_file_by_maximum_lines(self, company_name, content):
-        lines = [line for line in content.split('\n')]
-        title = lines[0]
-        for index in xrange(1, len(lines), self.maximum_lines):
-            with open('files/{0}{1}.csv'.format(company_name, index - 1), 'wb') as new_file:
-                new_file.write(title + '\n')
-                new_file.write('\n'.join(lines[index:index+self.maximum_lines]))
+    def split_csv_file_by_maximum_lines(self, f, company_name, content):
+        print company_name
+        df = pd.read_csv(io.StringIO(unicode(content)))
+        df = df[df.columns[1:-2]]
+        normalized_df = df.apply(lambda x: (x - pd.np.min(x)) / (pd.np.max(x) - pd.np.min(x)))
+        data = io.BytesIO()
+        normalized_df.to_csv(data, index=False, header=None)
+        f.write(company_name + ';')
+        f.write(';'.join(str(data.getvalue()).split('\n')) + '\n')
 
     def download_companies_stocks_as_csv_files(self):
-        for company in self.get_list_of_companies():
-            self.download_company_stocks_details_between_given_dates(company_name=company)
+        companies = self.get_list_of_companies()
+        for index in xrange(0, len(companies), self.maximum_lines):
+            self.download_company_stocks_details_between_given_dates(companies=companies[index:index+self.maximum_lines])
 
 
 import time
-data_handler = DataHandler(days_from_today=100, number_of_stocks=10)
+data_handler = DataHandler(days_from_today=15, number_of_stocks=30)
 start_time = time.time()
 data_handler.download_companies_stocks_as_csv_files()
-print("--- %s seconds ---" % (time.time() - start_time))
+print("\n--- %s seconds ---\n" % (time.time() - start_time))
 
