@@ -2,6 +2,8 @@ import json
 
 from flask import Flask, request, redirect
 import re
+from data_handler import DataHandler
+from program_manager import ProgramManager
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -22,8 +24,12 @@ def hello_world():
         else:
             data['params'].append(name)
     print data
+    DataHandler(days_from_today=data['days_from_today'],
+                stocks_parameters=data['params'],
+                number_of_stocks=data['number_of_stocks']).download_companies_stocks_as_csv_files()
+    ProgramManager().run_final(params=[data['clusters']]).close_program()
+    print 'done'
     return json.dumps(create_json())
-    # return redirect('/')
 
 '''
 {
@@ -37,7 +43,7 @@ def hello_world():
 def create_json():
     json= dict()
     json_cluster_to_number = dict()
-    with open('r-000000', 'r') as f:
+    with open('final/output/part-r-00000', 'r') as f:
         for line in f:
             params = re.sub(r"[()]", "", line).split('\t')
             cluster = params[0]

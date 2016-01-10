@@ -1,6 +1,7 @@
  <!DOCTYPE html>
 <html>
     <head>
+      <script src="/static/jquery/dist/jquery.js"></script>
       <!--Import Google Icon Font-->
       <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
       <!--Import materialize.css-->
@@ -10,6 +11,12 @@
       <!--Let browser know website is optimized for mobile-->
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     </head>
+    <script>
+      function analyze() {
+        $("#analyze").addClass("hide");
+        $("#loader").removeClass("hide");
+      }
+    </script>
     <body background="/static/graph.jpg">
     <div class="main">
     <form id="form" class="col s12" action="./analyze" method="POST">
@@ -25,29 +32,42 @@
           <label class="days" for="days">Days from today to analyze</label>
         </div>
       </div>
+
       <p>
-      <input type="checkbox" id="open" checked="checked" name="open">
-        <label for="open">Open</label>
-        <input type="checkbox" id="high" checked="checked" name="high">
-        <label for="high">High</label>
-        <input type="checkbox" id="low" checked="checked" name='low'>
-        <label for="low">Low</label>
-        <input type="checkbox" id="close" checked="checked" name="close">
-        <label for="close">Close</label>
+      <input type="checkbox" id="Open" checked="checked" name="Open">
+        <label for="Open">Open</label>
+        <input type="checkbox" id="High" checked="checked" name="High">
+        <label for="High">High</label>
+        <input type="checkbox" id="Low" checked="checked" name='Low'>
+        <label for="Low">Low</label>
+        <input type="checkbox" id="Close" checked="checked" name="Close">
+        <label for="Close">Close</label>
       </p>
       <div class="row">
       <p class="range-field col s12">
         <label class="clusters" for="clusters">Clusters</label>
-        <input type="range" id="clusters" min="1" max="10" name="clousters">
+        <input type="range" id="clusters" min="1" max="10" name="clusters">
       </p>
       </div>
-      <div class="row">
-        <button class="btn waves-effect waves-light col s10" type="submit">
+      <div id="analyze" class="row">
+        <button onclick="analyze()" class="btn waves-effect waves-light col s10" type="submit">
             Analyze
           <i class="material-icons right">send</i>
         </button>
       </div>
     </form>
+    <div id="loader" class="preloader-wrapper big active hide">
+      <div class="spinner-layer">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div>
+        <div class="circle-clipper right">
+         <div class="circle"></div>
+        </div>
+      </div>
+    </div>
   </div>
     <!--Import jQuery before materialize.js-->
     <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>

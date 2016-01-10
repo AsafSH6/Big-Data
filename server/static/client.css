@@ -10,7 +10,7 @@
     text-align: center !important;
 }
 
-.num-stocks, .days, .btn{
+.num-stocks, .days, .btn {
     margin-left: 9% !important;
 }
 
@@ -22,5 +22,8 @@
     font-size: 125%;
 }
 
+.preloader-wrapper {
+    margin-left: 37% !important;
+}
 
 

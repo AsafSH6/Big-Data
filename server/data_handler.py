@@ -19,8 +19,9 @@ YAHOO_FINANCE_API_URL_FORMAT = \
 
 
 class DataHandler(object):
-    def __init__(self, days_from_today, number_of_stocks=None, maximum_lines=10, stocks_file_path='data.txt'):
+    def __init__(self, days_from_today, stocks_parameters, number_of_stocks=None, maximum_lines=10, stocks_file_path='data.txt'):
         self.number_of_stocks = number_of_stocks
+        self.stocks_parameters = stocks_parameters
         self.maximum_lines = maximum_lines
         self.stocks_file_path = stocks_file_path
 
@@ -47,9 +48,9 @@ class DataHandler(object):
                     companies.append(line.split('|')[0])
         return companies
 
-    @threads(10)
+    # @threads(10)
     def download_company_stocks_details_between_given_dates(self, companies):
-        with open('files/{companies}.csv'.format(companies=', '.join(companies)), 'wb') as f:
+        with open('files_data/{companies}.csv'.format(companies=', '.join(companies)), 'wb') as f:
             for company_name in companies:
                 r = req.get(url=self.url.format(company_name=company_name))
                 if r.status_code is 200:
@@ -58,7 +59,7 @@ class DataHandler(object):
     def split_csv_file_by_maximum_lines(self, f, company_name, content):
         print company_name
         df = pd.read_csv(io.StringIO(unicode(content)))
-        df = df[df.columns[1:-2]]
+        df = df[self.stocks_parameters]
         # df.to_csv(company_name + '1.csv')
         normalized_df = df.apply(lambda x: (x - pd.np.min(x)) / (pd.np.max(x) - pd.np.min(x)))
         # normalized_df.to_csv(company_name + '2.csv')
@@ -70,12 +71,15 @@ class DataHandler(object):
     def download_companies_stocks_as_csv_files(self):
         companies = self.get_list_of_companies()
         for index in xrange(0, len(companies), self.maximum_lines):
-            self.download_company_stocks_details_between_given_dates(companies=companies[index:index+self.maximum_lines])
+            ret_val = self.download_company_stocks_details_between_given_dates(companies=companies[index:index+self.maximum_lines])
+            if ret_val is None:
+                print 'something went wrong'
 
 
-import time
-data_handler = DataHandler(days_from_today=15, number_of_stocks=200)
-start_time = time.time()
-data_handler.download_companies_stocks_as_csv_files()
-print("\n--- %s seconds ---\n" % (time.time() - start_time))
+
+# import time
+# data_handler = DataHandler(days_from_today=15, number_of_stocks=200)
+# start_time = time.time()
+# data_handler.download_companies_stocks_as_csv_files()
+# print("\n--- %s seconds ---\n" % (time.time() - start_time))
 
