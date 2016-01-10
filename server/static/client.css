@@ -1,0 +1,26 @@
+.main {
+    background: rgba(0, 0, 0, 0.3);
+    margin-top: 10%;
+    margin-left: 35%;
+    margin-right: 40%;
+}
+
+.row, .input-field, .validate, label, p {
+    color: white !important;
+    text-align: center !important;
+}
+
+.num-stocks, .days, .btn{
+    margin-left: 9% !important;
+}
+
+.btn {
+    margin-bottom: 4%;
+}
+
+.clusters {
+    font-size: 125%;
+}
+
+
+

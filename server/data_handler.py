@@ -45,7 +45,6 @@ class DataHandler(object):
                     break
                 else:
                     companies.append(line.split('|')[0])
-        # print companies
         return companies
 
     @threads(10)
@@ -60,7 +59,9 @@ class DataHandler(object):
         print company_name
         df = pd.read_csv(io.StringIO(unicode(content)))
         df = df[df.columns[1:-2]]
+        # df.to_csv(company_name + '1.csv')
         normalized_df = df.apply(lambda x: (x - pd.np.min(x)) / (pd.np.max(x) - pd.np.min(x)))
+        # normalized_df.to_csv(company_name + '2.csv')
         data = io.BytesIO()
         normalized_df.to_csv(data, index=False, header=None)
         f.write(company_name + ';')
@@ -73,7 +74,7 @@ class DataHandler(object):
 
 
 import time
-data_handler = DataHandler(days_from_today=15, number_of_stocks=30)
+data_handler = DataHandler(days_from_today=15, number_of_stocks=200)
 start_time = time.time()
 data_handler.download_companies_stocks_as_csv_files()
 print("\n--- %s seconds ---\n" % (time.time() - start_time))
