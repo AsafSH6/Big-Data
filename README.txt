@@ -1,3 +1,3 @@
 install requirements.txt (python libs)
-set program_manager.py HOST to your cloudera IP Address.
+set program_manager.py HOST with cloudera IP Address.
 Run flask_server.py
