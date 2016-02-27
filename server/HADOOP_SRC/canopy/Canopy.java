@@ -17,10 +17,9 @@ public class Canopy implements Iterable<Canopyable>{
 	
 	public void appendPoint(Canopyable point) {
 		boolean match = false;
-		for(Canopyable c : centroids) {
+		for(Canopyable c: centroids) {
 			double distance = c.distance(point);
 			if(distance < t1 && distance > t2) {
-//				System.out.println(point + " merged into: " + c);
 				c.increaseViews(point.getViews());
 				match = true;
 			}

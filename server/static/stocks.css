@@ -1,0 +1,19 @@
+.tpl {
+    color:red;
+}
+
+.replaced {
+    color: blue;
+}
+
+span{
+    padding-left: 15px;
+}
+
+canvas{
+    background: white;
+}
+
+.cluster {
+    margin-left: 100px !important;
+}

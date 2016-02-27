@@ -26,6 +26,8 @@ files/
 
 # rar files
 *.rar
+*.z
+*.r
 
 # test files
 test.*

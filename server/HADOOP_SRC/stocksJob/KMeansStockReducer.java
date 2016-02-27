@@ -9,40 +9,47 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class KMeansStockReducer  extends Reducer<KMeansStockCenterWriteable, KMeansable, KMeansStockCenterWriteable, KMeansable>{
+public class KMeansStockReducer extends Reducer<KMeansStockCenterWriteable, KMeansable, KMeansStockCenterWriteable, KMeansable>{
 	
 	public static enum Counter { CONVERGED }
-	HashSet<KMeansStockCenterWriteable> allKMeanCenters;
+	private SequenceFile.Writer seqWriter;
+	private boolean lastRound;
 	
 	@Override
 	protected void setup(Context context) throws IOException, InterruptedException {
 		super.setup(context);
-		this.allKMeanCenters = new HashSet<KMeansStockCenterWriteable>();
+
+		this.seqWriter = this.getSequenceFileWriter(context);
+		this.lastRound = context.getConfiguration().getBoolean("kmeans.last.round", false);
 	}
 	
     public void reduce(KMeansStockCenterWriteable key, Iterable<KMeansable> values, Context context) throws IOException, InterruptedException {
-//    	System.out.println("KMEANS REDUCER");
 
     	HashSet<KMeansable> points = deepCopyOfIterableIntoHashSet(values);
-    	boolean converged = key.calculateNewCenter(points.iterator());
-    	if(converged)
+    	boolean hasChanged = key.calculateNewCenter(points.iterator());
+    	if(hasChanged)
     		context.getCounter(Counter.CONVERGED).increment(1);
     	
-    	allKMeanCenters.add(key.clone());
-    	if(context.getConfiguration().getBoolean("kmeans.last.round", false)){
+    	if(this.lastRound == true){
+        	StockWriteable stock = new StockWriteable();
 	    	for(KMeansable k: points) {
-	    		context.write(key, k);
+	    		stock.appendName(((StockWriteable)k).getName());
 	    	}
+	    	context.write(key, stock);
+    	}
+    	else {
+    		this.seqWriter.append(key.getCanopyCenter(), key);
     	}
     }
     
     private HashSet<KMeansable> deepCopyOfIterableIntoHashSet(Iterable<KMeansable> iter) {
     	HashSet<KMeansable> newIter = new HashSet<KMeansable>();
-    	for(KMeansable k: iter) {
+    	for(KMeansable k: iter) 
     		newIter.add(k.clone());
-    	}
+    	
     	return newIter;
     }
     
@@ -51,22 +58,17 @@ public class KMeansStockReducer  extends Reducer<KMeansStockCenterWriteable, KMe
     	Path canopyCentersAndThierKMeansCentroids = new Path(conf.get("canopy.kmeans.center.path"));
     	FileSystem fs = FileSystem.get(conf);
     	fs.delete(canopyCentersAndThierKMeansCentroids, true);
-    	SequenceFile.Writer seqWriter = SequenceFile.createWriter(fs, conf, canopyCentersAndThierKMeansCentroids, StockWriteable.class, KMeansStockCenterWriteable.class);
+    	SequenceFile.Writer seqWriter = SequenceFile.createWriter(conf,
+                Writer.file(canopyCentersAndThierKMeansCentroids), Writer.keyClass(StockWriteable.class),
+                Writer.valueClass(KMeansStockCenterWriteable.class));
     	return seqWriter;
     }
-    // move to main
+    
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
     	super.cleanup(context);
-    	if(!context.getConfiguration().getBoolean("kmeans.last.round", false)) {
-	    	SequenceFile.Writer seqWriter = getSequenceFileWriter(context);
-	    	for(KMeansStockCenterWriteable center: allKMeanCenters) {
-	        	seqWriter.append(center.getCanopyCenter(), center);
-	//    		System.out.println("wrote the kmeans center: " + center +" that belongs to canopy center: " + center.getCanopyCenter());
-	    	}
-	//    	System.out.println("wrote " + allKMeanCenters.size() + "kmeans centers");
-	    	seqWriter.close();
-    	}
+    	
+    	this.seqWriter.close();
     }
 
 }

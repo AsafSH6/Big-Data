@@ -6,4 +6,6 @@ public interface KMeansable {
 	public KMeansable clone();
 	public double[] getVector();
 	public void setVector(double[] vector);
+	public void increaseViews(int views);
+	public int getViews();
 }

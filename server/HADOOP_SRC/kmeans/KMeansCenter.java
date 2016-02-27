@@ -54,17 +54,19 @@ public class KMeansCenter implements KMeansable{
 	
 	public boolean calculateNewCenter(Iterator<KMeansable> points) {
 		double[] newCenter = new double[this.kcenter.getVector().length];
-		int size = 0;
-		
+		int totalViews = 0;
 		while(points.hasNext()) {
-			double[] point = points.next().getVector();
+			KMeansable point = points.next();
+			
+			double[] pointVector = point.getVector();
+			totalViews += point.getViews();
+			
 			for(int i=0; i < newCenter.length; i++) {
-				newCenter[i] += point[i];
+				newCenter[i] += pointVector[i];
 			}
-			++size;
 		}
 		for(int i=0; i < newCenter.length; i++) {
-			 newCenter[i] /= size; 
+			 newCenter[i] /= totalViews; 
 		}
 		boolean hadChanged = !areVectorsEquals(newCenter);
 		if(hadChanged)
@@ -80,5 +82,15 @@ public class KMeansCenter implements KMeansable{
 				return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void increaseViews(int views) {
+		this.kcenter.increaseViews(views);
+	}
+
+	@Override
+	public int getViews() {
+		return this.kcenter.getViews();
 	}
 }

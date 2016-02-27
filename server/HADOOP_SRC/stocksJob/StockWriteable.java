@@ -3,7 +3,7 @@ package stocksJob;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import kmeans.KMeansable;
 
@@ -20,21 +20,12 @@ public class StockWriteable extends CanopyAndKMeansCommon implements  WritableCo
 	private Text name;
 	
 	public static StockWriteable readStockFromCSV(String line) {
-		String [] values = line.split(";");
+		String [] values = line.split(",");
 		Text name= new Text(values[0]);
-		ArrayList<Double> days = new ArrayList<Double>();
-		for (int i = 1; i < values.length; i++) {
-			String [] stock= values[i].split(",");
-			for (String string : stock) {
-				days.add(new Double(Double.parseDouble(string)));
-				
-			}
-		}
-		double[] vector = new double[days.size()];
-		for (int i = 0; i < vector.length; i++) {
-			vector[i]= days.get(i);
-			
-		}
+		double[] vector = new double[values.length - 1];
+		for(int i=1; i < values.length ; i++) 
+			vector[i - 1] = Double.parseDouble(values[i]);
+		
 		return new StockWriteable(vector, name);
 	}
 	
@@ -66,11 +57,24 @@ public class StockWriteable extends CanopyAndKMeansCommon implements  WritableCo
 		return this.name.toString();
 	}
 	
+	public void appendName(String name) {
+		if(!this.name.toString().equals(""))
+			this.name = new Text(this.name.toString() + ", " + name);
+		else
+			this.name = new Text(name);
+	}
+	
+	public void mergeWithAnotherVector(double[] vector, String name) {
+		for(int i=0; i < this.vector.length; i++) {
+			this.vector[i] += vector[i];
+		}
+		appendName(name);
+	}
+	
 	private double distance(StockWriteable other) {
 		double[] otherVector = other.getVector();
 		double distance = 0;
 		for(int i=0; i < this.vector.length; i++) {
-//			double sub = (this.vector[i] - this.vector[i+1]) - (otherVector[i] - otherVector[i+1]);
 			double sub = this.vector[i] - otherVector[i];
 			if(sub < 0)
 				sub = -sub;
@@ -123,19 +127,32 @@ public class StockWriteable extends CanopyAndKMeansCommon implements  WritableCo
 	
 	@Override
 	public String toString() {
-		return this.name.toString() + " " + this.vectorAsString();		
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		return this.distance((StockWriteable) o) == 0;
+		return this.name.toString();
 	}
 	
 	@Override
 	public int hashCode() {
-		return this.name.toString().hashCode();
-
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(vector);
+		return result;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		StockWriteable other = (StockWriteable) obj;
+		if (!Arrays.equals(vector, other.vector))
+			return false;
+		return true;
+	}
+	
+	
 
 	@Override
 	public double distance(Canopyable o) {

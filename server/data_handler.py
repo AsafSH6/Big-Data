@@ -1,5 +1,8 @@
 # utf-8
 import datetime as dt
+
+import shutil
+import os
 import requests as req
 import pandas as pd
 import io
@@ -65,20 +68,28 @@ class DataHandler(object):
         # normalized_df.to_csv(company_name + '2.csv')
         data = io.BytesIO()
         normalized_df.to_csv(data, index=False, header=None)
-        f.write(company_name + ';')
-        f.write(';'.join(str(data.getvalue()).split('\n')) + '\n')
+        f.write(company_name + ',')
+        f.write(','.join(str(data.getvalue()).split('\n')) + '\n')
+
+    def _remove_old_data(self):
+        try:
+            shutil.rmtree('files_data', True)
+            os.mkdir('files_data')
+            print 'deleted old data'
+        except Exception as e:
+            pass
 
     def download_companies_stocks_as_csv_files(self):
+        self._remove_old_data()
         companies = self.get_list_of_companies()
         for index in xrange(0, len(companies), self.maximum_lines):
-            ret_val = self.download_company_stocks_details_between_given_dates(companies=companies[index:index+self.maximum_lines])
-            if ret_val is None:
-                print 'something went wrong'
+            self.download_company_stocks_details_between_given_dates(companies=companies[index:index+self.maximum_lines])
 
+        print 'done downloading'
 
 
 # import time
-# data_handler = DataHandler(days_from_today=15, number_of_stocks=200)
+# data_handler = DataHandler(days_from_today=15, number_of_stocks=10)
 # start_time = time.time()
 # data_handler.download_companies_stocks_as_csv_files()
 # print("\n--- %s seconds ---\n" % (time.time() - start_time))

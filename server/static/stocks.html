@@ -1,0 +1,16 @@
+<div class="container">
+<div class="row stocks">
+
+    <h1>Stock Analizer</h1>
+
+    <div ng-repeat="cluster in clusters.clusters track by $index"  class="col s2 cluster">
+        <h4>Cluster {{$index + 1}}</h4>
+        <p ng-repeat="stock in cluster.stocks" class="cluster">
+            {{stock.name}}
+            <canvas id="line" class="chart chart-line" chart-data=stock.values chart-labels="labels" chart-legend="true" chart-series=clusters.stocks_params chart-click="onClick" >
+            </canvas>
+        </p>
+    </div>
+
+</div>
+</div>

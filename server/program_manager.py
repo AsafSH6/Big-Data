@@ -7,8 +7,8 @@ __author__ = 'Asaf'
 
 from ssh_client import Connection
 
-HOST = 'localhost'
-HOST = '192.168.23.129'
+# HOST = 'localhost'
+HOST = '192.168.23.131'
 USER = 'training'
 PASSWORD = 'training'
 
@@ -257,7 +257,7 @@ class ProgramManager(object):
         self.get_dir(local_path=dir_name,
                      remote_path='{dir_name}{output_dir}'.format(dir_name=dir_name, output_dir=output_dir[:-1]))
 
-        print 'done'
+        # print 'done'
         return self
 
     def close_program(self, params=None):
@@ -266,7 +266,7 @@ class ProgramManager(object):
         except Exception as e:
             pass
         finally:
-            print 'closed.'
+            print 'closed SSH connection.'
             # quit()
 
     def test(self, params):

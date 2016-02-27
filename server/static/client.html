@@ -1,62 +1,60 @@
  <!DOCTYPE html>
-<html>
-    <head>
-      <script src="/static/jquery/dist/jquery.js"></script>
-      <!--Import Google Icon Font-->
-      <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-      <!--Import materialize.css-->
-      <link type="text/css" rel="stylesheet" href="/static/materialize/css/materialize.min.css"  media="screen,projection"/>
-      <link type="text/css" rel="stylesheet" href="/static/client.css"/>
+ <style>
+   body{
+         background-image: url("/static/graph.jpg")!important;
+         color: white;
+   }
 
-      <!--Let browser know website is optimized for mobile-->
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    </head>
-    <script>
-      function analyze() {
-        $("#analyze").addClass("hide");
-        $("#loader").removeClass("hide");
-      }
-    </script>
-    <body background="/static/graph.jpg">
-    <div class="main">
-    <form id="form" class="col s12" action="./analyze" method="POST">
+   .row, .input-field, .validate, label, p {
+    color: white !important;
+    text-align: center !important;
+}
+ </style>
+  <div class="main">
+    <form id="form" class="col s12" ng-submit="postForm()">
       <div class="row">
         <div class="input-field col s10">
-          <input id="num-stocks" type="number" class="validate num-stocks" min="1" name="number_of_stocks" required>
+          <input ng-model="numOfStocks" id="num-stocks" type="number" class="validate num-stocks" min="1" name="number_of_stocks" required>
           <label class="num-stocks" for="num-stocks">Number of stocks</label>
         </div>
       </div>
       <div class="row">
         <div class="input-field col s10">
-          <input id="days" type="number" class="validate days" min="1" name="days_from_today" required>
+          <input ng-model="days" id="days" type="number" class="validate days" min="1" name="days_from_today" required>
           <label class="days" for="days">Days from today to analyze</label>
         </div>
       </div>
 
       <p>
-      <input type="checkbox" id="Open" checked="checked" name="Open">
+        <input ng-model="Open" type="checkbox" id="Open" checked="checked" name="Open">
         <label for="Open">Open</label>
-        <input type="checkbox" id="High" checked="checked" name="High">
+        <input ng-model="High" type="checkbox" id="High" checked="checked" name="High">
         <label for="High">High</label>
-        <input type="checkbox" id="Low" checked="checked" name='Low'>
+        <input ng-model="Low" type="checkbox" id="Low" checked="checked" name='Low'>
         <label for="Low">Low</label>
-        <input type="checkbox" id="Close" checked="checked" name="Close">
-        <label for="Close">Close</label>
+        <input ng-model="Close" type="checkbox" id="Close" checked="checked" name="Close">
+        <label  for="Close">Close</label>
       </p>
       <div class="row">
       <p class="range-field col s12">
         <label class="clusters" for="clusters">Clusters</label>
-        <input type="range" id="clusters" min="1" max="10" name="clusters">
+        <input ng-model="clusters" type="range" id="clusters" min="1" max="10" name="clusters">
       </p>
       </div>
-      <div id="analyze" class="row">
-        <button onclick="analyze()" class="btn waves-effect waves-light col s10" type="submit">
+      <div ng-hide="waiting" id="analyze" class="row">
+        <button class="btn waves-effect waves-light col s10" type="submit">
             Analyze
           <i class="material-icons right">send</i>
         </button>
       </div>
+      <div ng-hide="waiting" id="analyze_debug" class="row">
+        <button class="btn waves-effect red accent-2 col s10" type="button" ng-click="debugAnalyze()">
+            Debug Analyze
+          <i class="material-icons right">room</i>
+        </button>
+      </div>
     </form>
-    <div id="loader" class="preloader-wrapper big active hide">
+    <div ng-show="waiting" id="loader" class="preloader-wrapper big active">
       <div class="spinner-layer">
         <div class="circle-clipper left">
           <div class="circle"></div>
@@ -70,7 +68,5 @@
     </div>
   </div>
     <!--Import jQuery before materialize.js-->
-    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-    <script type="text/javascript" src="/static/materialize/js/materialize.min.js"></script>
-  </body>
-</html>
+    <!--<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>-->
+    <!--<script type="text/javascript" src="/static/materialize/js/materialize.min.js"></script>-->

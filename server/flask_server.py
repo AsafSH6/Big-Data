@@ -1,64 +1,43 @@
-import json
-
-from flask import Flask, request, redirect
-import re
+from flask import Flask, request
 from data_handler import DataHandler
 from program_manager import ProgramManager
+from outputfile_to_json import JsonCreator
 
 app = Flask(__name__, static_url_path='/static')
 
+
 @app.route('/')
 def index():
-    return app.send_static_file('client.html')
+    return app.send_static_file('index.html')
 
 
 @app.route('/analyze', methods=['POST'])
-def hello_world():
-    # print '\n'.join(dir(request))
-    print request.form
-    data = dict()
-    data['params'] = list()
-    for name, value in request.form.iteritems():
-        if value != "on":
-            data[name] = int(value)
-        else:
-            data['params'].append(name)
-    print data
-    DataHandler(days_from_today=data['days_from_today'],
-                stocks_parameters=data['params'],
-                number_of_stocks=data['number_of_stocks']).download_companies_stocks_as_csv_files()
-    ProgramManager().run_final(params=[data['clusters']]).close_program()
+def analyze():
+    form = request.get_json()
+    if form['debug']:
+        print 'DEBUG'
+        return JsonCreator(stocks_params=['Open', 'High', 'Low', 'Close'],
+                           input_data_path='debug_files_data/',
+                           output_data_path='debug_output_files/part-r-00000').create_json()
+
+    print form
+    stocks_params = [param for param in form['stocks_params'] if form['stocks_params'][param]]
+
+    ordered_dict = {
+        'Open': 1,
+        'High': 2,
+        'Low': 3,
+        'Close': 4
+    }
+    stocks_params = sorted(stocks_params, key=lambda x: ordered_dict[x])
+    print stocks_params
+
+    DataHandler(days_from_today=form['days_from_today'],
+                stocks_parameters=stocks_params,
+                number_of_stocks=form['number_of_stocks']).download_companies_stocks_as_csv_files()
+    ProgramManager().run_final(params=[form['clusters']]).close_program()
     print 'done'
-    return json.dumps(create_json())
-
-'''
-{
-    cluster1: [{name: A, values: [1,2,3]}, {name: AA, values: [1,4,3]}],
-    cluster2: [{name: B, values: [1,2,3]}],
-    cluster3: [{name: C, values: [1,2,3]}],
-}
-'''
-
-
-def create_json():
-    json= dict()
-    json_cluster_to_number = dict()
-    with open('final/output/part-r-00000', 'r') as f:
-        for line in f:
-            params = re.sub(r"[()]", "", line).split('\t')
-            cluster = params[0]
-            if cluster not in json_cluster_to_number:
-                json_cluster_to_number[cluster] = "cluster" + str(len(json))
-                json[json_cluster_to_number[cluster]] = list()
-            sub_params = params[1].split()
-            json[json_cluster_to_number[cluster]].append({
-                "name": sub_params[0],
-                "values": [float(value) for value in sub_params[1].split(',')]
-            })
-    return json
-
-
-
+    return JsonCreator(stocks_params=stocks_params).create_json()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

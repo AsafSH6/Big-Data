@@ -1,0 +1,151 @@
+<html ng-app="stocksJob">
+<head>
+    <meta charset="utf-8">
+    <title>Angular.js Example</title>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="/static/materialize/css/materialize.min.css"  media="screen,projection"/>
+    <link type="text/css" rel="stylesheet" href="/static/client.css"/>
+    <link type="text/css" rel="stylesheet" href="/static/stocks.css"/>
+    <link rel="stylesheet" href="/static/angular-chart.js/dist/angular-chart.css">
+    <script type="text/javascript" src="/static/materialize/js/materialize.min.js"></script>
+
+    <script src="/static/angular/angular.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular-route.min.js"></script>
+    <script src="/static/Chart.js/Chart.js"></script>
+    <script type="text/javascript" src="/static/jquery.sparkline.js"></script>
+    <script src="/static/angular-chart.js/dist/angular-chart.js"></script>
+
+    <script>
+        var stocksJob = angular.module('stocksJob', ['ngRoute','chart.js']);
+        stocksJob.config(function($routeProvider) {
+            $routeProvider.
+            when('/graphs', {
+                templateUrl: '/static/stocks.html',
+                controller: 'stocksJobCtrl'
+            })
+            .when('/', {
+                templateUrl: '/static/client.html',
+                controller: 'formJobCtrl'
+            })
+        });
+
+        stocksJob.factory('stocks', function($http){
+            var data;
+            function analyze(data, callback) {
+                console.log(data);
+                $http.post('/analyze', data).success(callback);
+            }
+
+            function setData(data) {
+                this.data = data
+            }
+            function getData() {
+                return this.data
+            }
+            return {
+                analyze: analyze,
+                setData: setData,
+                getData: getData
+            };
+        });
+
+        stocksJob.controller('formJobCtrl', function ($scope, $location, stocks) {
+            $scope.Open = true
+            $scope.High = true
+            $scope.Low = true
+            $scope.Close = true
+            $scope.waiting = false
+
+            $scope.postForm = function() {
+                if($scope.Open != true && $scope.High != true && $scope.Low != true && $scope.Close != true) {
+                    alert("Please choose parameters")
+                    return
+                }
+
+                $scope.waiting = true
+                console.log('post form')
+                    stocks.analyze({
+                    debug: false,
+                    number_of_stocks: $scope.numOfStocks,
+                    days_from_today: $scope.days,
+                    stocks_params: {Open: $scope.Open, High: $scope.High, Low: $scope.Low, Close: $scope.Close},
+                    clusters: clusters.valueAsNumber
+                    }, function(response) {
+                        stocks.setData(response)
+                        $location.path('graphs')
+                    })
+            }
+            $scope.debugAnalyze = function() {
+                $scope.waiting = true
+                stocks.analyze({
+                    debug: true
+                }, function(response) {
+                        stocks.setData(response)
+                        $location.path('graphs')
+                        })
+                }
+        })
+
+
+        stocksJob.controller('stocksJobCtrl', function ($scope, stocks){
+            console.log("stocks job")
+            $scope.clusters = stocks.getData()
+            console.log($scope.clusters)
+            $scope.labels = []
+            var days = $scope.clusters["clusters"][0]["stocks"][0]["values"][0].length
+            console.log(days)
+            for(var i=0; i < days; i++) {
+                $scope.labels.push(i+1);
+            }
+            $scope.series = [];
+            $scope.onClick = function (points, evt) {
+                console.log(points, evt);
+            };
+
+        });
+
+        stocksJob.config(['ChartJsProvider', function (ChartJsProvider) {
+            // Configure all line charts
+            ChartJsProvider.setOptions('Line', {
+                datasetFill: false
+
+
+
+            });
+
+            ChartJsProvider.setOptions({
+                colours: ['#ff3300', '#0000ff', '#00ff00', '#808080'],
+                responsive: false
+            });
+        }])
+
+
+/*
+        stocksJob.directive("bulletcharksparkline", function() {
+            return {
+                restrict:"E",
+                scope:{
+                    data:"@"
+                },
+                //template: "<div class='tpl'></div>",
+                compile: function(tElement,tAttrs,transclude){
+                    tElement.replaceWith("<span>"+tAttrs.data+"</span>");
+                    return function(scope, element, attrs){
+                        attrs.$observe("data", function(newValue){
+                            element.html(newValue);
+                            element.sparkline('html',{ type: 'line', width: '100%', height: '80px', barWidth: 11, barColor: 'blue' });
+                        });
+                    };
+                }
+            };
+        });
+        */
+    </script>
+</head>
+<body>
+<div ng-view></div>
+</body>
+</html>
